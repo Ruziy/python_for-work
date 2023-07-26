@@ -1,7 +1,7 @@
 import cv2
 
 trained_face_data = cv2.CascadeClassifier('faces.xml')
-img = cv2.imread('images/work-3.jpg')
+img = cv2.imread('images/work-7.jpg')
 img = cv2.resize(img,(600,400))
 grayscaled_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 

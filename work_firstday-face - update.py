@@ -1,20 +1,20 @@
 import cv2
 import numpy as np
-img = cv2.imread('images/work-9.jpg')
+img = cv2.imread('images/work-14.jpg')
 img = cv2.resize(img,(600,400))
 img=cv2.GaussianBlur(img,(3,3),0)
 trained_face_data = cv2.CascadeClassifier('faces.xml')
 trained_eye_data = cv2.CascadeClassifier('eye.xml')
 grayscaled_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 face_coordinates = trained_face_data.detectMultiScale(grayscaled_img ,scaleFactor=1.3,minNeighbors=3)
-eye_coordinates = trained_eye_data.detectMultiScale(grayscaled_img ,scaleFactor=1.3,minNeighbors=4)
+eye_coordinates = trained_eye_data.detectMultiScale(grayscaled_img ,scaleFactor=1.4,minNeighbors=5)
 if len(face_coordinates) != 0:
     for (x, y, w, h) in face_coordinates:
         cv2.rectangle(img, (x, y), (x + w, y + h), (0,0, 255), 2)
         cv2.putText(img,'Person',(x+w//4,y+h+h//6),cv2.FONT_HERSHEY_TRIPLEX,0.6,(0,0,255),thickness=1)
 if len(face_coordinates) == 0:
     kernel = np.ones((5,5))
-    canny = cv2.Canny(grayscaled_img,200,30)
+    canny = cv2.Canny(grayscaled_img,200,50)
     dill = cv2.dilate(canny,kernel,iterations=1)
     contours,h = cv2.findContours(dill,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
     for (x, y, w, h) in eye_coordinates:

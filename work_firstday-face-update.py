@@ -7,13 +7,11 @@ def auto_scaleFactor_forBody(turple,num_person):
                 scaleFact = scaleFact+0.01
                 if(int(scaleFact) == 4):
                     break
-                turple= trained_body_data.detectMultiScale(grayscaled_img ,scaleFactor=scaleFact,minNeighbors=4)
-        x,y,w,h = turple[0]
-        cv2.rectangle(img, (x, y), (x + w, y + h), (0,0,255), 2)
-        cv2.putText(img,'Person',(x+w//4,y+h+h//4),cv2.FONT_HERSHEY_TRIPLEX,0.5,(0,0,255),thickness=1)
+                turple = trained_body_data.detectMultiScale(grayscaled_img ,scaleFactor=scaleFact,minNeighbors=3)
+                return turple
 
 
-img = cv2.imread('images/work-8.jpg')
+img = cv2.imread('images/test-upperbody.jpg')
 img = cv2.resize(img,(600,400))
 img=cv2.GaussianBlur(img,(3,3),0)
 
@@ -31,7 +29,15 @@ eye_coordinates = trained_eye_data.detectMultiScale(grayscaled_img ,scaleFactor=
 body_coordinates = trained_body_data.detectMultiScale(grayscaled_img ,scaleFactor=1.03,minNeighbors=3)
 
 if len(body_coordinates) != 0:
-    auto_scaleFactor_forBody(body_coordinates,num_of_person)
+        scaleFact = 1.0
+        while(len(body_coordinates) != num_of_person):
+                scaleFact = scaleFact+0.01
+                if(int(scaleFact) == 4):
+                    break
+                body_coordinates = trained_body_data.detectMultiScale(grayscaled_img ,scaleFactor=scaleFact,minNeighbors=3)      
+        x,y,w,h = body_coordinates[0]   
+        cv2.rectangle(img, (x, y), (x + w, y + h), (0,0,255), 2)
+        cv2.putText(img,'Body',(x+w//4,y+h+h//4),cv2.FONT_HERSHEY_TRIPLEX,0.5,(0,0,255),thickness=1)
 
 if len(face_coordinates) != 0 :
     for (x, y, w, h) in face_coordinates:

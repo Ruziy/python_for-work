@@ -1,6 +1,5 @@
 import cv2 
 import numpy as np
-from math import atan, pi,ceil
 cap = cv2.VideoCapture('videos/videos-object-7.mp4')
 def nothing(x):
     pass
@@ -21,13 +20,32 @@ while True:
     dill = cv2.dilate(canny,kernel,iterations=2)
     new_img = img.copy()
     contours,h = cv2.findContours(dill,cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    list_1 = []
+    list_2 = []
+    logik = False
     for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area > 10000 :
+            if area > 10000: 
+                logik = True
+                list_2.append(area//1000)
+                if(len(list_2) != 1):
+                        if area < min(list_2)*1010:
+                            rect = cv2.minAreaRect(cnt) 
+                            box = cv2.boxPoints(rect) 
+                            box = np.intp(box) 
+                            cv2.drawContours(img,[box],0,(0,255,0),5)
+            else:
+                list_1.append(area)
+    if (logik == False):
+         list_1 = list(set(list_1))
+         print(max(list_1))
+         for cnt in contours:
+              if (area > max(list_1)):
                 rect = cv2.minAreaRect(cnt) 
                 box = cv2.boxPoints(rect) 
                 box = np.intp(box) 
-    cv2.drawContours(img,[box],0,(0,255,0),5)
+                cv2.drawContours(img,[box],0,(0,255,0),5)
+                   
     Hori = np.concatenate((dill, gray), axis=1)
     Hori_2 = np.concatenate((new_img,img), axis=1)
     cv2.imshow('One layer', Hori)

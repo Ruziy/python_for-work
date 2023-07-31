@@ -38,9 +38,9 @@ while True:
                 list_1.append(area)
     if (logik == False):
          list_1 = list(set(list_1))
-         print(max(list_1))
          for cnt in contours:
-              if (area > max(list_1)):
+              area = cv2.contourArea(cnt)
+              if area > max(list_1)-10:
                 rect = cv2.minAreaRect(cnt) 
                 box = cv2.boxPoints(rect) 
                 box = np.intp(box) 

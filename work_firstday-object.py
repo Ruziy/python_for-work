@@ -12,7 +12,7 @@ kernel = np.ones((4,4))
 while True:
     succes,img = cap.read()
     img = cv2.resize(img,(800,600))
-    img = cv2.GaussianBlur(img,(9,9),0)
+    # img = cv2.GaussianBlur(img,(9,9),0)
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     thresh1 = cv2.getTrackbarPos('T1','Track')
     thresh2 = cv2.getTrackbarPos('T2','Track')

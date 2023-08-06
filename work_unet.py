@@ -34,7 +34,7 @@ def load_images(image, mask):
     image = image / 255.0
     
     mask = tf.io.read_file(mask)
-    mask = tf.io.decode_png(mask)
+    mask = tf.io.decode_png(mask,channels=3)
     mask = tf.image.rgb_to_grayscale(mask)
     mask = tf.image.resize(mask, OUTPUT_SIZE)
     mask = tf.image.convert_image_dtype(mask, tf.float32)
@@ -64,8 +64,8 @@ def augmentate_images(image, masks):
     
     return image, masks
 
-images = sorted(glob.glob('dataset/images/*.jpg'))
-masks = sorted(glob.glob('dataset/masks/*.png'))
+images = sorted(glob.glob('images_for_unet/img/*.jpg'))
+masks = sorted(glob.glob('images_for_unet/masks/*.png'))
 
 images_dataset = tf.data.Dataset.from_tensor_slices(images)
 masks_dataset = tf.data.Dataset.from_tensor_slices(masks)
@@ -76,26 +76,26 @@ dataset = dataset.map(load_images, num_parallel_calls=tf.data.AUTOTUNE)
 dataset = dataset.repeat(60)
 dataset = dataset.map(augmentate_images, num_parallel_calls=tf.data.AUTOTUNE)
 
-# images_and_masks = list(dataset.take(5))
+images_and_masks = list(dataset.take(5))
 
-# fig, ax = plt.subplots(nrows = 2, ncols = 5, figsize=(15, 5), dpi=125)
+fig, ax = plt.subplots(nrows = 2, ncols = 5, figsize=(15, 5), dpi=125)
 
-# for i, (image, masks) in enumerate(images_and_masks):
-#     ax[0, i].set_title('Image')
-#     ax[0, i].set_axis_off()
-#     ax[0, i].imshow(image)
+for i, (image, masks) in enumerate(images_and_masks):
+    ax[0, i].set_title('Image')
+    ax[0, i].set_axis_off()
+    ax[0, i].imshow(image)
         
-#     ax[1, i].set_title('Mask')
-#     ax[1, i].set_axis_off()    
-#     ax[1, i].imshow(image/1.5)
+    ax[1, i].set_title('Mask')
+    ax[1, i].set_axis_off()    
+    ax[1, i].imshow(image/1.5)
    
-#     for channel in range(CLASSES):
-#         contours = measure.find_contours(np.array(masks[:,:,channel]))
-#         for contour in contours:
-#             ax[1, i].plot(contour[:, 1], contour[:, 0], linewidth=1, color=COLORS[channel])
+    for channel in range(CLASSES):
+        contours = measure.find_contours(np.array(masks[:,:,channel]))
+        for contour in contours:
+            ax[1, i].plot(contour[:, 1], contour[:, 0], linewidth=1, color=COLORS[channel])
 
-# plt.show()
-# plt.close()
+plt.show()
+plt.close()
 
 train_dataset = dataset.take(2000).cache()
 test_dataset = dataset.skip(2000).take(100).cache()

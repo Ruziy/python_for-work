@@ -25,6 +25,7 @@ COLORS = ['black', 'red', 'lime',
 SAMPLE_SIZE = (256, 256)
 
 OUTPUT_SIZE = (1080, 1920)
+
 def load_images(image, mask):
     image = tf.io.read_file(image)
     image = tf.io.decode_jpeg(image)
@@ -63,8 +64,8 @@ def augmentate_images(image, masks):
     
     return image, masks
 
-images = sorted(glob.glob('SemanticSegmentationLesson/dataset/images/*.jpg'))
-masks = sorted(glob.glob('SemanticSegmentationLesson/dataset/masks/*.png'))
+images = sorted(glob.glob('dataset/images/*.jpg'))
+masks = sorted(glob.glob('dataset/masks/*.png'))
 
 images_dataset = tf.data.Dataset.from_tensor_slices(images)
 masks_dataset = tf.data.Dataset.from_tensor_slices(masks)
@@ -75,26 +76,26 @@ dataset = dataset.map(load_images, num_parallel_calls=tf.data.AUTOTUNE)
 dataset = dataset.repeat(60)
 dataset = dataset.map(augmentate_images, num_parallel_calls=tf.data.AUTOTUNE)
 
-images_and_masks = list(dataset.take(5))
+# images_and_masks = list(dataset.take(5))
 
-fig, ax = plt.subplots(nrows = 2, ncols = 5, figsize=(15, 5), dpi=125)
+# fig, ax = plt.subplots(nrows = 2, ncols = 5, figsize=(15, 5), dpi=125)
 
-for i, (image, masks) in enumerate(images_and_masks):
-    ax[0, i].set_title('Image')
-    ax[0, i].set_axis_off()
-    ax[0, i].imshow(image)
+# for i, (image, masks) in enumerate(images_and_masks):
+#     ax[0, i].set_title('Image')
+#     ax[0, i].set_axis_off()
+#     ax[0, i].imshow(image)
         
-    ax[1, i].set_title('Mask')
-    ax[1, i].set_axis_off()    
-    ax[1, i].imshow(image/1.5)
+#     ax[1, i].set_title('Mask')
+#     ax[1, i].set_axis_off()    
+#     ax[1, i].imshow(image/1.5)
    
-    for channel in range(CLASSES):
-        contours = measure.find_contours(np.array(masks[:,:,channel]))
-        for contour in contours:
-            ax[1, i].plot(contour[:, 1], contour[:, 0], linewidth=1, color=COLORS[channel])
+#     for channel in range(CLASSES):
+#         contours = measure.find_contours(np.array(masks[:,:,channel]))
+#         for contour in contours:
+#             ax[1, i].plot(contour[:, 1], contour[:, 0], linewidth=1, color=COLORS[channel])
 
-plt.show()
-plt.close()
+# plt.show()
+# plt.close()
 
 train_dataset = dataset.take(2000).cache()
 test_dataset = dataset.skip(2000).take(100).cache()
@@ -185,3 +186,31 @@ out_layer = out_layer(x)
 unet_like = tf.keras.Model(inputs=inp_layer, outputs=out_layer)
 
 tf.keras.utils.plot_model(unet_like, show_shapes=True, dpi=72)
+
+def dice_mc_metric(a, b):
+    a = tf.unstack(a, axis=3)
+    b = tf.unstack(b, axis=3)
+    
+    dice_summ = 0
+    
+    for i, (aa, bb) in enumerate(zip(a, b)):
+        numenator = 2 * tf.math.reduce_sum(aa * bb) + 1
+        denomerator = tf.math.reduce_sum(aa + bb) + 1
+        dice_summ += numenator / denomerator
+        
+    avg_dice = dice_summ / CLASSES
+    
+    return avg_dice
+
+def dice_mc_loss(a, b):
+    return 1 - dice_mc_metric(a, b)
+
+def dice_bce_mc_loss(a, b):
+    return 0.3 * dice_mc_loss(a, b) + tf.keras.losses.binary_crossentropy(a, b)
+
+unet_like.compile(optimizer='adam', loss=[dice_bce_mc_loss], metrics=[dice_mc_metric])
+
+history_dice = unet_like.fit(train_dataset, validation_data=test_dataset, epochs=10 , initial_epoch=0)
+
+unet_like.save_weights('networks/unet_like')
+

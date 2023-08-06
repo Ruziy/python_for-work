@@ -1,3 +1,5 @@
 /faces.xml
 /images
 /videos
+/images_for_unet/img
+/images_for_unet/masks
